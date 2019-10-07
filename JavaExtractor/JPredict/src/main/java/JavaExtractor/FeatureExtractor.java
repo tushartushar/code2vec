@@ -22,175 +22,186 @@ import JavaExtractor.Visitors.FunctionVisitor;
 
 @SuppressWarnings("StringEquality")
 public class FeatureExtractor {
-	private CommandLineValues m_CommandLineValues;
-	private static Set<String> s_ParentTypeToAddChildId = Stream
-			.of("AssignExpr", "ArrayAccessExpr", "FieldAccessExpr", "MethodCallExpr")
-			.collect(Collectors.toCollection(HashSet::new));
+    private final int sampleType;
+    private CommandLineValues m_CommandLineValues;
+    private static Set<String> s_ParentTypeToAddChildId = Stream
+            .of("AssignExpr", "ArrayAccessExpr", "FieldAccessExpr", "MethodCallExpr")
+            .collect(Collectors.toCollection(HashSet::new));
 
-	final static String lparen = "(";
-	final static String rparen = ")";
-	final static String upSymbol = "^";
-	final static String downSymbol = "_";
+    final static String lparen = "(";
+    final static String rparen = ")";
+    final static String upSymbol = "^";
+    final static String downSymbol = "_";
 
-	public FeatureExtractor(CommandLineValues commandLineValues) {
-		this.m_CommandLineValues = commandLineValues;
-	}
+    public FeatureExtractor(CommandLineValues commandLineValues, int sampleType) {
+        this.m_CommandLineValues = commandLineValues;
+        this.sampleType = sampleType;
+    }
 
-	public ArrayList<ProgramFeatures> extractFeatures(String code) throws ParseException, IOException {
-		CompilationUnit compilationUnit = parseFileWithRetries(code);
-		FunctionVisitor functionVisitor = new FunctionVisitor();
+    public ArrayList<ProgramFeatures> extractFeatures(String code) throws ParseException, IOException {
+        CompilationUnit compilationUnit = parseFileWithRetries(code);
+        FunctionVisitor functionVisitor = new FunctionVisitor();
 
-		functionVisitor.visit(compilationUnit, null);
+        functionVisitor.visit(compilationUnit, null);
 
-		ArrayList<MethodContent> methods = functionVisitor.getMethodContents();
-		ArrayList<ProgramFeatures> programs = generatePathFeatures(methods);
+        ArrayList<MethodContent> methods = functionVisitor.getMethodContents();
+        ArrayList<ProgramFeatures> programs = generatePathFeatures(methods);
 
-		return programs;
-	}
+        return programs;
+    }
 
-	private CompilationUnit parseFileWithRetries(String code) throws IOException {
-		final String classPrefix = "public class Test {";
-		final String classSuffix = "}";
-		final String methodPrefix = "SomeUnknownReturnType f() {";
-		final String methodSuffix = "return noSuchReturnValue; }";
+    private CompilationUnit parseFileWithRetries(String code) throws IOException {
+        final String classPrefix = "public class Test {";
+        final String classSuffix = "}";
+        final String methodPrefix = "SomeUnknownReturnType f() {";
+        final String methodSuffix = "return noSuchReturnValue; }";
 
-		String originalContent = code;
-		String content = originalContent;
-		CompilationUnit parsed = null;
-		try {
-			parsed = JavaParser.parse(content);
-		} catch (ParseProblemException e1) {
-			// Wrap with a class and method
-			try {
-				content = classPrefix + methodPrefix + originalContent + methodSuffix + classSuffix;
-				parsed = JavaParser.parse(content);
-			} catch (ParseProblemException e2) {
-				// Wrap with a class only
-				content = classPrefix + originalContent + classSuffix;
-				parsed = JavaParser.parse(content);
-			}
-		}
+        String originalContent = code;
+        String content = originalContent;
+        CompilationUnit parsed = null;
+        try {
+            parsed = JavaParser.parse(content);
+        } catch (ParseProblemException e1) {
+            // Wrap with a class and method
+            try {
+                content = classPrefix + methodPrefix + originalContent + methodSuffix + classSuffix;
+                parsed = JavaParser.parse(content);
+            } catch (ParseProblemException e2) {
+                // Wrap with a class only
+                content = classPrefix + originalContent + classSuffix;
+                parsed = JavaParser.parse(content);
+            }
+        }
 
-		return parsed;
-	}
+        return parsed;
+    }
 
-	public ArrayList<ProgramFeatures> generatePathFeatures(ArrayList<MethodContent> methods) {
-		ArrayList<ProgramFeatures> methodsFeatures = new ArrayList<>();
-		for (MethodContent content : methods) {
-			if (content.getLength() < m_CommandLineValues.MinCodeLength
-					|| content.getLength() > m_CommandLineValues.MaxCodeLength)
-				continue;
-			ProgramFeatures singleMethodFeatures = generatePathFeaturesForFunction(content);
-			if (!singleMethodFeatures.isEmpty()) {
-				methodsFeatures.add(singleMethodFeatures);
-			}
-		}
-		return methodsFeatures;
-	}
+    public ArrayList<ProgramFeatures> generatePathFeatures(ArrayList<MethodContent> methods) {
+        ArrayList<ProgramFeatures> methodsFeatures = new ArrayList<>();
+        for (MethodContent content : methods) {
+            if (content.getLength() < m_CommandLineValues.MinCodeLength
+                    || content.getLength() > m_CommandLineValues.MaxCodeLength)
+                continue;
+            ProgramFeatures singleMethodFeatures = generatePathFeaturesForFunction(content);
+            if (!singleMethodFeatures.isEmpty()) {
+                methodsFeatures.add(singleMethodFeatures);
+            }
+        }
+        return methodsFeatures;
+    }
 
-	private ProgramFeatures generatePathFeaturesForFunction(MethodContent methodContent) {
-		ArrayList<Node> functionLeaves = methodContent.getLeaves();
-		ProgramFeatures programFeatures = new ProgramFeatures(methodContent.getName());
+    private ProgramFeatures generatePathFeaturesForFunction(MethodContent methodContent) {
+        ArrayList<Node> functionLeaves = methodContent.getLeaves();
 
-		for (int i = 0; i < functionLeaves.size(); i++) {
-			for (int j = i + 1; j < functionLeaves.size(); j++) {
-				String separator = Common.EmptyString;
+        ProgramFeatures programFeatures;
+        if (sampleType == 0)
+            programFeatures = new ProgramFeatures(methodContent.getName());
+        else {
+            if (sampleType == 1)
+                programFeatures = new ProgramFeatures(methodContent.getName(), true);
+            else
+                programFeatures = new ProgramFeatures(methodContent.getName(), false);
+        }
 
-				String path = generatePath(functionLeaves.get(i), functionLeaves.get(j), separator);
-				if (path != Common.EmptyString) {
-					Property source = functionLeaves.get(i).getUserData(Common.PropertyKey);
-					Property target = functionLeaves.get(j).getUserData(Common.PropertyKey);
-					programFeatures.addFeature(source, path, target);
-				}
-			}
-		}
-		return programFeatures;
-	}
+        for (int i = 0; i < functionLeaves.size(); i++) {
+            for (int j = i + 1; j < functionLeaves.size(); j++) {
+                String separator = Common.EmptyString;
 
-	private static ArrayList<Node> getTreeStack(Node node) {
-		ArrayList<Node> upStack = new ArrayList<>();
-		Node current = node;
-		while (current != null) {
-			upStack.add(current);
-			current = current.getParentNode();
-		}
-		return upStack;
-	}
+                String path = generatePath(functionLeaves.get(i), functionLeaves.get(j), separator);
+                if (path != Common.EmptyString) {
+                    Property source = functionLeaves.get(i).getUserData(Common.PropertyKey);
+                    Property target = functionLeaves.get(j).getUserData(Common.PropertyKey);
+                    programFeatures.addFeature(source, path, target);
+                }
+            }
+        }
+        return programFeatures;
+    }
 
-	private String generatePath(Node source, Node target, String separator) {
-		String down = downSymbol;
-		String up = upSymbol;
-		String startSymbol = lparen;
-		String endSymbol = rparen;
+    private static ArrayList<Node> getTreeStack(Node node) {
+        ArrayList<Node> upStack = new ArrayList<>();
+        Node current = node;
+        while (current != null) {
+            upStack.add(current);
+            current = current.getParentNode();
+        }
+        return upStack;
+    }
 
-		StringJoiner stringBuilder = new StringJoiner(separator);
-		ArrayList<Node> sourceStack = getTreeStack(source);
-		ArrayList<Node> targetStack = getTreeStack(target);
+    private String generatePath(Node source, Node target, String separator) {
+        String down = downSymbol;
+        String up = upSymbol;
+        String startSymbol = lparen;
+        String endSymbol = rparen;
 
-		int commonPrefix = 0;
-		int currentSourceAncestorIndex = sourceStack.size() - 1;
-		int currentTargetAncestorIndex = targetStack.size() - 1;
-		while (currentSourceAncestorIndex >= 0 && currentTargetAncestorIndex >= 0
-				&& sourceStack.get(currentSourceAncestorIndex) == targetStack.get(currentTargetAncestorIndex)) {
-			commonPrefix++;
-			currentSourceAncestorIndex--;
-			currentTargetAncestorIndex--;
-		}
+        StringJoiner stringBuilder = new StringJoiner(separator);
+        ArrayList<Node> sourceStack = getTreeStack(source);
+        ArrayList<Node> targetStack = getTreeStack(target);
 
-		int pathLength = sourceStack.size() + targetStack.size() - 2 * commonPrefix;
-		if (pathLength > m_CommandLineValues.MaxPathLength) {
-			return Common.EmptyString;
-		}
+        int commonPrefix = 0;
+        int currentSourceAncestorIndex = sourceStack.size() - 1;
+        int currentTargetAncestorIndex = targetStack.size() - 1;
+        while (currentSourceAncestorIndex >= 0 && currentTargetAncestorIndex >= 0
+                && sourceStack.get(currentSourceAncestorIndex) == targetStack.get(currentTargetAncestorIndex)) {
+            commonPrefix++;
+            currentSourceAncestorIndex--;
+            currentTargetAncestorIndex--;
+        }
 
-		if (currentSourceAncestorIndex >= 0 && currentTargetAncestorIndex >= 0) {
-			int pathWidth = targetStack.get(currentTargetAncestorIndex).getUserData(Common.ChildId)
-					- sourceStack.get(currentSourceAncestorIndex).getUserData(Common.ChildId);
-			if (pathWidth > m_CommandLineValues.MaxPathWidth) {
-				return Common.EmptyString;
-			}
-		}
+        int pathLength = sourceStack.size() + targetStack.size() - 2 * commonPrefix;
+        if (pathLength > m_CommandLineValues.MaxPathLength) {
+            return Common.EmptyString;
+        }
 
-		for (int i = 0; i < sourceStack.size() - commonPrefix; i++) {
-			Node currentNode = sourceStack.get(i);
-			String childId = Common.EmptyString;
-			String parentRawType = currentNode.getParentNode().getUserData(Common.PropertyKey).getRawType();
-			if (i == 0 || s_ParentTypeToAddChildId.contains(parentRawType)) {
-				childId = saturateChildId(currentNode.getUserData(Common.ChildId))
-						.toString();
-			}
-			stringBuilder.add(String.format("%s%s%s%s%s", startSymbol,
-					currentNode.getUserData(Common.PropertyKey).getType(), childId, endSymbol, up));
-		}
+        if (currentSourceAncestorIndex >= 0 && currentTargetAncestorIndex >= 0) {
+            int pathWidth = targetStack.get(currentTargetAncestorIndex).getUserData(Common.ChildId)
+                    - sourceStack.get(currentSourceAncestorIndex).getUserData(Common.ChildId);
+            if (pathWidth > m_CommandLineValues.MaxPathWidth) {
+                return Common.EmptyString;
+            }
+        }
 
-		Node commonNode = sourceStack.get(sourceStack.size() - commonPrefix);
-		String commonNodeChildId = Common.EmptyString;
-		Property parentNodeProperty = commonNode.getParentNode().getUserData(Common.PropertyKey);
-		String commonNodeParentRawType = Common.EmptyString;
-		if (parentNodeProperty != null) {
-			commonNodeParentRawType = parentNodeProperty.getRawType();
-		}
-		if (s_ParentTypeToAddChildId.contains(commonNodeParentRawType)) {
-			commonNodeChildId = saturateChildId(commonNode.getUserData(Common.ChildId))
-					.toString();
-		}
-		stringBuilder.add(String.format("%s%s%s%s", startSymbol,
-				commonNode.getUserData(Common.PropertyKey).getType(), commonNodeChildId, endSymbol));
+        for (int i = 0; i < sourceStack.size() - commonPrefix; i++) {
+            Node currentNode = sourceStack.get(i);
+            String childId = Common.EmptyString;
+            String parentRawType = currentNode.getParentNode().getUserData(Common.PropertyKey).getRawType();
+            if (i == 0 || s_ParentTypeToAddChildId.contains(parentRawType)) {
+                childId = saturateChildId(currentNode.getUserData(Common.ChildId))
+                        .toString();
+            }
+            stringBuilder.add(String.format("%s%s%s%s%s", startSymbol,
+                    currentNode.getUserData(Common.PropertyKey).getType(), childId, endSymbol, up));
+        }
 
-		for (int i = targetStack.size() - commonPrefix - 1; i >= 0; i--) {
-			Node currentNode = targetStack.get(i);
-			String childId = Common.EmptyString;
-			if (i == 0 || s_ParentTypeToAddChildId.contains(currentNode.getUserData(Common.PropertyKey).getRawType())) {
-				childId = saturateChildId(currentNode.getUserData(Common.ChildId))
-						.toString();
-			}
-			stringBuilder.add(String.format("%s%s%s%s%s", down, startSymbol,
-					currentNode.getUserData(Common.PropertyKey).getType(), childId, endSymbol));
-		}
+        Node commonNode = sourceStack.get(sourceStack.size() - commonPrefix);
+        String commonNodeChildId = Common.EmptyString;
+        Property parentNodeProperty = commonNode.getParentNode().getUserData(Common.PropertyKey);
+        String commonNodeParentRawType = Common.EmptyString;
+        if (parentNodeProperty != null) {
+            commonNodeParentRawType = parentNodeProperty.getRawType();
+        }
+        if (s_ParentTypeToAddChildId.contains(commonNodeParentRawType)) {
+            commonNodeChildId = saturateChildId(commonNode.getUserData(Common.ChildId))
+                    .toString();
+        }
+        stringBuilder.add(String.format("%s%s%s%s", startSymbol,
+                commonNode.getUserData(Common.PropertyKey).getType(), commonNodeChildId, endSymbol));
 
-		return stringBuilder.toString();
-	}
+        for (int i = targetStack.size() - commonPrefix - 1; i >= 0; i--) {
+            Node currentNode = targetStack.get(i);
+            String childId = Common.EmptyString;
+            if (i == 0 || s_ParentTypeToAddChildId.contains(currentNode.getUserData(Common.PropertyKey).getRawType())) {
+                childId = saturateChildId(currentNode.getUserData(Common.ChildId))
+                        .toString();
+            }
+            stringBuilder.add(String.format("%s%s%s%s%s", down, startSymbol,
+                    currentNode.getUserData(Common.PropertyKey).getType(), childId, endSymbol));
+        }
 
-	private Integer saturateChildId(int childId) {
-		return Math.min(childId, m_CommandLineValues.MaxChildId);
-	}
+        return stringBuilder.toString();
+    }
+
+    private Integer saturateChildId(int childId) {
+        return Math.min(childId, m_CommandLineValues.MaxChildId);
+    }
 }

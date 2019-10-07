@@ -72,6 +72,7 @@ class Code2VecModel(Code2VecModelBase):
         # Wrap the layers into a Keras model, using our subtoken-metrics and the CE loss.
         inputs = [path_source_token_input, path_input, path_target_token_input, context_valid_mask]
         self.keras_train_model = keras.Model(inputs=inputs, outputs=target_index)
+        # self.keras_train_model = keras.Model(inputs=inputs, outputs=code_vectors)
 
         # Actual target word predictions (as strings). Used as a second output layer.
         # Used for predict() and for the evaluation metrics calculations.

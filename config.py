@@ -123,7 +123,7 @@ class Config:
         self.SAVE_T2V: Optional[str] = None   # TODO: update README;
         self.VERBOSE_MODE: int = 0
         self.LOGS_PATH: Optional[str] = None
-        self.DL_FRAMEWORK: str = ''  # in {'keras', 'tensorflow'}
+        self.DL_FRAMEWORK: str = 'keras'  # in {'keras', 'tensorflow'}
         self.USE_TENSORBOARD: bool = False
 
         # Automatically filled by `Code2VecModelBase._init_num_of_examples()`.

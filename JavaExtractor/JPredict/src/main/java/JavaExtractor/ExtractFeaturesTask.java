@@ -10,19 +10,20 @@ import java.util.concurrent.Callable;
 import org.apache.commons.lang3.StringUtils;
 
 import com.github.javaparser.ParseException;
-import com.github.javaparser.ast.CompilationUnit;
 
 import JavaExtractor.Common.CommandLineValues;
 import JavaExtractor.Common.Common;
 import JavaExtractor.FeaturesEntities.ProgramFeatures;
 
 public class ExtractFeaturesTask implements Callable<Void> {
+	private final int sampleType;
 	CommandLineValues m_CommandLineValues;
 	Path filePath;
 
-	public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path) {
+	public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path, int sampleType) {
 		m_CommandLineValues = commandLineValues;
 		this.filePath = path;
+		this.sampleType = sampleType;
 	}
 
 	@Override
@@ -59,7 +60,7 @@ public class ExtractFeaturesTask implements Callable<Void> {
 			e.printStackTrace();
 			code = Common.EmptyString;
 		}
-		FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
+		FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues, sampleType);
 
 		ArrayList<ProgramFeatures> features = featureExtractor.extractFeatures(code);
 

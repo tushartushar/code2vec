@@ -6,8 +6,8 @@
 # test_data: by default, points to the validation set, since this is the set that
 #   will be evaluated after each training iteration. If you wish to test
 #   on the final (held-out) test set, change 'val' to 'test'.
-type=java14m
-dataset_name=java14m
+type=test
+dataset_name=test_dataset
 data_dir=data/${dataset_name}
 data=${data_dir}/${dataset_name}
 test_data=${data_dir}/${dataset_name}.val.c2v
@@ -15,4 +15,7 @@ model_dir=models/${type}
 
 mkdir -p models/${model_dir}
 set -e
-python3 -u code2vec.py --data ${data} --test ${test_data} --save ${model_dir}/saved_model
+source env/bin/activate
+python3 -u code2vec.py --data ${data} --test ${test_data} --save ${model_dir}/saved_model --export_code_vectors
+#python3 -u code2vec.py --data ${data} --test ${test_data} --save ${model_dir}/saved_model --save_w2v ${model_dir}/tokens.txt
+#--data 'data/test_dataset/test_dataset' --test 'data/test_dataset/test_dataset.val.c2v' --save 'models/test_dataset'

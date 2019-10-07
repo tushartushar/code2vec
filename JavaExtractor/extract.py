@@ -21,11 +21,26 @@ def get_immediate_subdirectories(a_dir):
 TMP_DIR = ""
 
 def ParallelExtractDir(args, dir):
-    ExtractFeaturesForDir(args, dir, "")
+    processed = False
+    if dir.endswith("Positive"):
+        ExtractFeaturesForDir(args, dir, "", sample_type=1)
+        processed = True
 
+    if dir.endswith("Negative"):
+        ExtractFeaturesForDir(args, dir, "", sample_type=2)
+        processed = True
 
-def ExtractFeaturesForDir(args, dir, prefix):
-    command = ['java', '-cp', args.jar, 'JavaExtractor.App',
+    if not processed:
+        ExtractFeaturesForDir(args, dir, "")
+
+# sample_type 0: not applicable, 1: positive, 2: negative
+def ExtractFeaturesForDir(args, dir, prefix, sample_type=0):
+    if sample_type > 0:
+        command = ['java', '-cp', args.jar, 'JavaExtractor.App',
+                   '--max_path_length', str(args.max_path_length), '--max_path_width', str(args.max_path_width),
+                   '--dir', dir, '--num_threads', str(args.num_threads), '--sample_type', str(sample_type)]
+    else:
+        command = ['java', '-cp', args.jar, 'JavaExtractor.App',
                '--max_path_length', str(args.max_path_length), '--max_path_width', str(args.max_path_width),
                '--dir', dir, '--num_threads', str(args.num_threads)]
 
@@ -87,10 +102,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.file is not None:
+        print("invoking JavaExtractor")
         command = 'java -cp ' + args.jar + ' JavaExtractor.App --max_path_length ' + \
                   str(args.max_path_length) + ' --max_path_width ' + str(args.max_path_width) + ' --file ' + args.file
         os.system(command)
     elif args.dir is not None:
+        print("ExtractFeaturesForDirsList")
         subdirs = get_immediate_subdirectories(args.dir)
         to_extract = subdirs
         if len(subdirs) == 0:

@@ -472,7 +472,7 @@ class SubtokensEvaluationMetric:
 
     @property
     def f1(self):
-        return 2 * self.precision * self.recall / (self.precision + self.recall)
+        return 2 * self.precision * self.recall / (self.precision + self.recall) if (self.precision + self.recall) > 0 else 0
 
 
 class TopKAccuracyEvaluationMetric:

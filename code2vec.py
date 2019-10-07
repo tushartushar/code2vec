@@ -6,10 +6,10 @@ from model_base import Code2VecModelBase
 
 def load_model_dynamically(config: Config) -> Code2VecModelBase:
     assert config.DL_FRAMEWORK in {'tensorflow', 'keras'}
-    if config.DL_FRAMEWORK == 'tensorflow':
-        from tensorflow_model import Code2VecModel
-    elif config.DL_FRAMEWORK == 'keras':
-        from keras_model import Code2VecModel
+    # if config.DL_FRAMEWORK == 'tensorflow':
+    from tensorflow_model import Code2VecModel
+    # elif config.DL_FRAMEWORK == 'keras':
+    # from keras_model import Code2VecModel
     return Code2VecModel(config)
 
 
