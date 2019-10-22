@@ -30,6 +30,9 @@ namespace Extractor
 
         [Option('l', "max_contexts", Default = 30000, HelpText = "Max number of path contexts to sample. Affects only very large snippets")]
         public int MaxContexts { get; set; }
+		
+		[Option('s', "sample_type", Default = 0, HelpText = "it shows whether the sample is a negative sample or positive sample")]
+        public int SampleType { get; set; }
     }
 
     public static class Utilities
