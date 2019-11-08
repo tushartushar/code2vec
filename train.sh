@@ -6,8 +6,8 @@
 # test_data: by default, points to the validation set, since this is the set that
 #   will be evaluated after each training iteration. If you wish to test
 #   on the final (held-out) test set, change 'val' to 'test'.
-type=cs_dataset_cc
-dataset_name=cs_dataset_cc
+type=cs_dataset_cm
+dataset_name=cs_dataset_cm
 data_dir=data/${dataset_name}
 data=${data_dir}/${dataset_name}
 test_data=${data_dir}/${dataset_name}.val.c2v

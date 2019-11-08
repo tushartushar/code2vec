@@ -18,10 +18,10 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR='D:\research\smellDetectionML\code2vec_data\train_cc'
-VAL_DIR='D:\research\smellDetectionML\code2vec_data\validate_cc'
-TEST_DIR='D:\research\smellDetectionML\code2vec_data\test_cc'
-DATASET_NAME=cs_dataset_cc
+TRAIN_DIR='D:\research\smellDetectionML\code2vec_data\train_cm'
+VAL_DIR='D:\research\smellDetectionML\code2vec_data\validate_cm'
+TEST_DIR='D:\research\smellDetectionML\code2vec_data\test_cm'
+DATASET_NAME=cs_dataset_cm
 MAX_CONTEXTS=200
 WORD_VOCAB_SIZE=1301136
 PATH_VOCAB_SIZE=911417

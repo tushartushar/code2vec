@@ -231,9 +231,6 @@ class Code2VecModel(Code2VecModelBase):
             loss = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(
                 labels=tf.reshape(input_tensors.target_index, [-1]),
                 logits=logits)) / batch_size
-            # loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(
-            #     labels=tf.reshape(input_tensors.target_index, [-1]),
-            #     logits=logits)) / batch_size
 
             optimizer = tf.compat.v1.train.AdamOptimizer().minimize(loss)
 
@@ -449,7 +446,13 @@ class SubtokensEvaluationMetric:
     def update_batch(self, results):
         for original_name, top_words in results:
             try:
+                if not (original_name == 'True' or original_name == 'False'):
+                    print('original other than true/false')
+                    return
                 prediction = self.filter_impossible_names_fn(top_words)[0]
+                if not (prediction == 'True' or prediction == 'False'):
+                    print('prediction other than true/false')
+                    return
                 if 'True' in prediction:
                     if 'True' in original_name:
                         self.nr_true_positives += 1
