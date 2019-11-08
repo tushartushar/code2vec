@@ -2,9 +2,9 @@
 ###########################################################
 # Change the following values to preprocess a new dataset.
 # TRAIN_DIR, VAL_DIR and TEST_DIR should be paths to      
-#   directories containing sub-directories with .java files
+#   directories containing sub-directories with .cs files
 #   each of {TRAIN_DIR, VAL_DIR and TEST_DIR} should have sub-dirs,
-#   and data will be extracted from .java files found in those sub-dirs).
+#   and data will be extracted from .cs files found in those sub-dirs).
 # DATASET_NAME is just a name for the currently extracted 
 #   dataset.                                              
 # MAX_CONTEXTS is the number of contexts to keep for each 
@@ -18,16 +18,16 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR=r'D:\research\smellDetectionML\code2vec_data\train'
-VAL_DIR=r'D:\research\smellDetectionML\code2vec_data\validate'
-TEST_DIR=r'D:\research\smellDetectionML\code2vec_data\test'
-DATASET_NAME=cs_dataset
+TRAIN_DIR='D:\research\smellDetectionML\code2vec_data\train_cc'
+VAL_DIR='D:\research\smellDetectionML\code2vec_data\validate_cc'
+TEST_DIR='D:\research\smellDetectionML\code2vec_data\test_cc'
+DATASET_NAME=cs_dataset_cc
 MAX_CONTEXTS=200
 WORD_VOCAB_SIZE=1301136
 PATH_VOCAB_SIZE=911417
 TARGET_VOCAB_SIZE=261245
 NUM_THREADS=64
-PYTHON=python3
+PYTHON=python
 ###########################################################
 
 TRAIN_DATA_FILE=${DATASET_NAME}.train.raw.txt

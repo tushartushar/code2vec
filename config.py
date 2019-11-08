@@ -3,7 +3,7 @@ from typing import Optional
 import logging
 from argparse import ArgumentParser
 import sys
-
+import os
 
 class Config:
     @classmethod
@@ -47,13 +47,13 @@ class Config:
         self.SAVE_EVERY_EPOCHS = 1
         self.TRAIN_BATCH_SIZE = 1024
         self.TEST_BATCH_SIZE = self.TRAIN_BATCH_SIZE
-        self.TOP_K_WORDS_CONSIDERED_DURING_PREDICTION = 10
+        self.TOP_K_WORDS_CONSIDERED_DURING_PREDICTION = 1
         self.NUM_BATCHES_TO_LOG_PROGRESS = 100
         self.NUM_TRAIN_BATCHES_TO_EVALUATE = 1800
         self.READER_NUM_PARALLEL_BATCHES = 6  # cpu cores [for tf.contrib.data.map_and_batch() in the reader]
         self.SHUFFLE_BUFFER_SIZE = 10000
         self.CSV_BUFFER_SIZE = 100 * 1024 * 1024  # 100 MB
-        self.MAX_TO_KEEP = 10
+        self.MAX_TO_KEEP = 20
 
         # model hyper-params
         self.MAX_CONTEXTS = 200
@@ -201,6 +201,10 @@ class Config:
         return model_path + '__only-weights'
 
     @property
+    def model_load_dir(self):
+        return '/'.join(self.MODEL_LOAD_PATH.split('/')[:-1])
+
+    @property
     def entire_model_load_path(self) -> Optional[str]:
         if not self.is_loading:
             return None
@@ -227,6 +231,9 @@ class Config:
     def verify(self):
         if not self.is_training and not self.is_loading:
             raise ValueError("Must train or load a model.")
+        if self.is_loading and not os.path.isdir(self.model_load_dir):
+            raise ValueError("Model load dir `{model_load_dir}` does not exist.".format(
+                model_load_dir=self.model_load_dir))
         if self.DL_FRAMEWORK not in {'tensorflow', 'keras'}:
             raise ValueError("config.DL_FRAMEWORK must be in {'tensorflow', 'keras'}.")
 

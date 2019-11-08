@@ -68,6 +68,8 @@ class Code2VecModel(Code2VecModelBase):
         # "Decode": Now we use another dense layer to get the target word embedding from each code vector.
         target_index = Dense(
             self.vocabs.target_vocab.size, use_bias=False, activation='softmax', name='target_index')(code_vectors)
+        # target_index = Dense(
+        #     1, use_bias=False, activation='sigmoid', name='target_index')(code_vectors)
 
         # Wrap the layers into a Keras model, using our subtoken-metrics and the CE loss.
         inputs = [path_source_token_input, path_input, path_target_token_input, context_valid_mask]
@@ -115,7 +117,7 @@ class Code2VecModel(Code2VecModelBase):
 
     @classmethod
     def _create_optimizer(cls):
-        return tf.optimizers.Adam()
+        return tf.keras.optimizers.Adam()
 
     def _compile_keras_model(self, optimizer=None):
         if optimizer is None:

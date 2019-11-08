@@ -30,6 +30,7 @@ namespace Extractor
         public string Code { get; set; }
         public bool ShouldHash { get; set; }
         public int MaxContexts { get; set; }
+        public int SampleType { get; private set; }
 
         public Extractor(string code, Options opts)
 		{
@@ -37,6 +38,7 @@ namespace Extractor
             WidthLimit = opts.MaxWidth;
             ShouldHash = !opts.NoHash;
             MaxContexts = opts.MaxContexts;
+            SampleType = opts.SampleType;
             Code = code;
 		}
 
@@ -173,7 +175,8 @@ namespace Extractor
 
             List<String> results = new List<string>();
 
-            foreach(var method in methods) {
+            foreach (var method in methods)
+            {
 
                 String methodName = method.Identifier.ValueText;
                 Tree methodTree = new Tree(method);
@@ -197,7 +200,7 @@ namespace Extractor
                         + "," + MaybeHash(this.PathNodesToString(path))
                         + "," + SplitNameUnlessEmpty(tokenToVar[path.Right].Name);
 
-                    Debug.WriteLine(path.Left.FullSpan+" "+tokenToVar[path.Left].Name+ "," +this.PathNodesToString(path)+ "," + tokenToVar[path.Right].Name+" "+path.Right.FullSpan);    
+                    Debug.WriteLine(path.Left.FullSpan + " " + tokenToVar[path.Left].Name + "," + this.PathNodesToString(path) + "," + tokenToVar[path.Right].Name + " " + path.Right.FullSpan);
                     contexts.Add(pathString);
                 }
 
@@ -216,7 +219,14 @@ namespace Extractor
                         contexts.Add(batch + "," + "COMMENT" + "," + batch);
                     }
                 }
-                results.Add(String.Join("|", subtokensMethodName) + " " + String.Join(" ", contexts));  
+                //results.Add(String.Join("|", subtokensMethodName) + " " + String.Join(" ", contexts));
+                if (SampleType > 0)
+                    if (SampleType == 1)
+                        results.Add("True" + " " + String.Join(" ", contexts));
+                    else
+                        results.Add("False" + " " + String.Join(" ", contexts));
+                else
+                    results.Add(String.Join("|", subtokensMethodName) + " " + String.Join(" ", contexts));
             }
             return results;
         }

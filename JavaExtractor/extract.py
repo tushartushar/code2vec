@@ -51,7 +51,7 @@ def ExtractFeaturesForDir(args, dir, prefix, sample_type=0):
     failed = False
     with open(outputFileName, 'a') as outputFile:
         sleeper = subprocess.Popen(command, stdout=outputFile, stderr=subprocess.PIPE)
-        timer = Timer(600000, kill, [sleeper])
+        timer = Timer(60000000, kill, [sleeper])
 
         try:
             timer.start()

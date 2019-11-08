@@ -11,6 +11,7 @@ namespace Extractor
     {
         static List<String> ExtractSingleFile(string filename, Options opts)
         {
+            //Console.WriteLine("ExtractSingleFile - Processing " + filename);
             string data = File.ReadAllText(filename);
             var extractor = new Extractor(data, opts);
             List<String> result = extractor.Extract();
@@ -29,11 +30,12 @@ namespace Extractor
                     return;
                 });
 
+            Console.WriteLine("Invoking Extractor with sample type: " + options.SampleType);
             string path = options.Path;
             string[] files;
             if (Directory.Exists(path))
             {
-                files = Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories);
+                files = Directory.GetFiles(path, "*.code", SearchOption.AllDirectories);
             }
             else
             {
